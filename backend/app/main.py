@@ -20,6 +20,26 @@ app.include_router(graph.router)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+origins = [
+    "http://localhost",
+    "http://localhost:8080",
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+
 class User(BaseModel):
     username: str
     email: Optional[str] = None
@@ -74,11 +94,14 @@ def get_cik(ticker: str, q: Optional[str] = None):
 
 @app.get("/ticker/")
 def get_ticker_list():
-    with open('./data/tickers.txt', 'r') as f:
+    with open('./backend/data/tickers.txt', 'r') as f:
         tickers = f.read()
     tickers =  tickers.split('\n')
     tickers = list(filter(lambda t: len(t) > 0, tickers))
     tickers = list(map(lambda t: t.rstrip(), tickers))
+
+    tickers = [{"id": i, "ticker": ticker} for i, ticker in enumerate(tickers)]
+
     return tickers
 
 
